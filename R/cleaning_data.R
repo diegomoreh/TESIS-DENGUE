@@ -148,22 +148,22 @@ convert_edad <- function(data_event,
   data_event_years <-
     dplyr::mutate(data_event,
                   edad =
-                  dplyr::case_when(eval(parse(text = col_uni_med)) == 1 ~
-                                     round(eval(parse(text = col_edad)), 3),
-                                   eval(parse(text = col_uni_med)) == 2 ~
-                                     round((eval(parse(text =
-                                                         col_edad)) / 12), 3),
-                                   eval(parse(text = col_uni_med)) == 3 ~
-                                     round((eval(parse(text =
-                                                         col_edad)) / 876), 3),
-                                   eval(parse(text = col_uni_med)) == 4 ~
-                                     round((eval(parse(text =
-                                                         col_edad)) / 525960),
-                                           3),
-                                   eval(parse(text = col_uni_med)) == 5 ~
-                                     round((eval(parse(text =
-                                                         col_edad)) / 3.156e+7),
-                                           3)))
+                    dplyr::case_when(eval(parse(text = col_uni_med)) == 1 ~
+                                       round(eval(parse(text = col_edad)), 3),
+                                     eval(parse(text = col_uni_med)) == 2 ~
+                                       round((eval(parse(text =
+                                                           col_edad)) / 12), 3),
+                                     eval(parse(text = col_uni_med)) == 3 ~
+                                       round((eval(parse(text =
+                                                           col_edad)) / 876), 3),
+                                     eval(parse(text = col_uni_med)) == 4 ~
+                                       round((eval(parse(text =
+                                                           col_edad)) / 525960),
+                                             3),
+                                     eval(parse(text = col_uni_med)) == 5 ~
+                                       round((eval(parse(text =
+                                                           col_edad)) / 3.156e+7),
+                                             3)))
   return(data_event_years)
 }
 
@@ -404,4 +404,87 @@ limpiar_data_sivigila <- function(data_event, year) {
                                   col_edad = "edad",
                                   col_uni_med = "uni_med")
   return(data_event_limp)
+}
+
+
+limpiar_data_canal_endemico <- function(data_event, year, ventana){
+  
+  years_to_analyze <- seq(year - ventana + 1, year)
+  
+  ## Dates and DIVIPOLA codes preparation and cleaning
+  
+  data_event <- limpiar_encabezado(data_event)
+  data_event <- estandarizar_geo_cods(data_event)
+  
+  data_event <- data_event %>% dplyr::mutate(
+    cod_mun_r = dplyr::case_when(
+      .data$cod_dpto_r == 1 ~ .data$cod_pais_o, # 1 indicates residence abroad
+      nchar(.data$cod_mun_r) == 1 ~
+        as.numeric(paste(.data$cod_dpto_r,
+                         .data$cod_mun_r,
+                         sep = "00"
+        )),
+      nchar(.data$cod_mun_r) == 2 ~
+        as.numeric(paste(.data$cod_dpto_r,
+                         .data$cod_mun_r,
+                         sep = "0"
+        )),
+      nchar(.data$cod_mun_r) == 3 ~
+        as.numeric(paste0(.data$cod_dpto_r,
+                          .data$cod_mun_r
+        )),
+      TRUE ~ NA_real_
+    ),
+    cod_mun_o = dplyr::case_when(
+      # 1 indicates infection occurred abroad
+      .data$cod_dpto_o == 1 ~ .data$cod_pais_o,
+      nchar(.data$cod_mun_o) == 1 ~
+        as.numeric(paste(.data$cod_dpto_o,
+                         .data$cod_mun_o,
+                         sep = "00"
+        )),
+      nchar(.data$cod_mun_o) == 2 ~
+        as.numeric(paste(.data$cod_dpto_o,
+                         .data$cod_mun_o,
+                         sep = "0"
+        )),
+      nchar(.data$cod_mun_o) == 3 ~
+        as.numeric(paste0(.data$cod_dpto_o,
+                          .data$cod_mun_o
+        )),
+      TRUE ~ NA_real_
+    ),
+    epi_week = lubridate::epiweek(.data$fec_not),
+    epi_month = lubridate::month(.data$fec_not),
+    epi_year = lubridate::epiyear(.data$fec_not)
+  )
+  
+  # Cleaning of cases without specified municipalities
+  
+  data_event <- dplyr::filter(data_event, !is.na(data_event$cod_mun_o))
+  data_event <- dplyr::filter(data_event, !is.na(data_event$cod_mun_r))
+  data_event <- dplyr::filter(data_event, !is.na(data_event$cod_mun_n))
+  
+  # Cleaning of cases out of the years range
+  
+  data_event <- dplyr::filter(
+    data_event,
+    .data$epi_year %in% years_to_analyze
+  )
+  
+  # Cleaning of cases from abroad
+  
+  data_event <- dplyr::filter(data_event, .data$cod_pais_o == 170)
+  
+  # Cleaning of typos
+  path <- system.file("data", "divipola_table.rda", package = "epiCo")
+  load(path)
+  divipola_table <- divipola_table
+  
+  typos <- which(!(data_event$cod_mun_o %in% divipola_table$COD_MPIO))
+  
+  data_event <- data_event[-typos, ]
+  
+  #####
+  return(data_event)
 }
