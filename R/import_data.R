@@ -80,15 +80,52 @@ import_sep_data <- function(path_data) {
 #' contiene el nombre de la enfermedad o evento
 #' @param year Un numeric (numerico) que contiene el año
 #' de referencia para la descarga de los datos
+#' @param ventana Un numeric (numerico) que contiene la cantidad
+#' de años de referencia para la descarga de datos
 #' @return Un `data.frame` con los datos de los últimos cinco años
 #' de una enfermedad
 #' @examples
 #' import_data_canal_endemico(nombre_event = "MALARIA",
 #'                            year = 2020)
 #' @export
-import_data_canal_endemico <- function(nombre_event, year) {
-  event_data <- data.frame()
-  return(event_data)
+import_data_canal_endemico <- function(nombre_event, year, ventana) {
+  
+  years_to_analyze <- seq(year - ventana + 1, year)
+  
+  tags_to_analyze <- c(
+    "FEC_NOT",
+    "COD_PAIS_O", "COD_DPTO_O", "COD_MUN_O",
+    "COD_DPTO_R", "COD_MUN_R",
+    "COD_DPTO_N", "COD_MUN_N"
+  )
+  
+  disease_data <- data.frame(matrix(ncol = length(tags_to_analyze), nrow = 0))
+  colnames(disease_data) <- tags_to_analyze
+  
+  for (y in years_to_analyze) {
+    temp_data <- sivirep::import_data_event(y, nombre_event)
+    temp_data$FEC_NOT <- as.character(temp_data$FEC_NOT)
+    # temp_data$FEC_NOT <- format(
+    #   as.Date(temp_data$FEC_NOT,
+    #           # nolint start: nonportable_path_linter
+    #           tryFormats = c("%Y-%m-%d", "%d/%m/%Y")
+    #           # nolint end: nonportable_path_linter
+    #   ),
+    #   "%Y-%m-%d"
+    # )
+    temp_data <- format_fecha(temp_data,
+                              format_fecha = "%AAAA-%MM-%DD",
+                              nombres_col = "FEC_NOT")
+    disease_data <- rbind(
+      disease_data,
+      dplyr::select(
+        temp_data,
+        tags_to_analyze
+      )
+    )
+  }
+  
+  return(disease_data)
 }
 
 #' Importar las enfermedades y años disponibles disposibles
