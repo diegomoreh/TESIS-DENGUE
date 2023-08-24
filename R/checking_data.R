@@ -11,18 +11,22 @@
 #' @examples
 #' data_sivigila <- import_data_resumen_sivigila()
 #' data_sivigila <- limpiar_encabezado(data_sivigila)
-#' filtrar_event(nombre_event = "MALAR",
-#'               data_sivigila = data_sivigila)
+#' filtrar_event(
+#'   nombre_event = "MALAR",
+#'   data_sivigila = data_sivigila
+#' )
 #' @export
 filtrar_event <- function(nombre_event,
                           data_sivigila) {
   if ("conteo_casos" %in% names(data_sivigila)) {
     names(data_sivigila)[names(data_sivigila)
-                         == "conteo_casos"] <- "casos"
+    == "conteo_casos"] <- "casos"
   }
   list_events <- unique(data_sivigila$nombre)
-  list_specific <- list_events[stringr::str_detect(list_events,
-                                                   nombre_event) == TRUE]
+  list_specific <- list_events[stringr::str_detect(
+    list_events,
+    nombre_event
+  ) == TRUE]
   data_fil <- data_sivigila %>%
     dplyr::filter(.data$nombre %in% list_specific)
   return(data_fil)
@@ -55,17 +59,23 @@ geo_filtro <- function(data_event, nombre_dpto = NULL, nombre_mun = NULL) {
   }
   if (!is.null(dept_data)) {
     data_dept_filt <-
-      dplyr::filter(data_event,
-                    data_event[[cols_ocurren[1]]] %in%
-                      dept_data$codigo_departamento)
+      dplyr::filter(
+        data_event,
+        data_event[[cols_ocurren[1]]] %in%
+          dept_data$codigo_departamento
+      )
   }
   if (!is.null(nombre_mun)) {
-    code_mun <- modficar_cod_mun(dept_data$codigo_departamento,
-                                 dept_data$codigo_municipio)
+    code_mun <- modficar_cod_mun(
+      dept_data$codigo_departamento,
+      dept_data$codigo_municipio
+    )
     data_dept_filt <-
-      dplyr::filter(data_dept_filt,
-                    data_dept_filt[[cols_ocurren[2]]] %in%
-                      as.integer(code_mun))
+      dplyr::filter(
+        data_dept_filt,
+        data_dept_filt[[cols_ocurren[2]]] %in%
+          as.integer(code_mun)
+      )
   }
   return(data_dept_filt)
 }
@@ -84,8 +94,10 @@ geo_filtro <- function(data_event, nombre_dpto = NULL, nombre_mun = NULL) {
 #' @export
 obtener_cods_dpto <- function(geo_cods) {
   data_deptos <- geo_cods %>%
-    dplyr::group_by(cod_dep = .data$codigo_departamento,
-                    name_dep = .data$nombre_departamento) %>%
+    dplyr::group_by(
+      cod_dep = .data$codigo_departamento,
+      name_dep = .data$nombre_departamento
+    ) %>%
     dplyr::select(.data$cod_dep, .data$name_dep) %>%
     dplyr::distinct()
   data_deptos <- data_deptos[1:33, ]
@@ -105,20 +117,28 @@ obtener_cods_dpto <- function(geo_cods) {
 #' obtener_casos_pob_especial(data_event = data_event)
 #' @export
 obtener_casos_pob_especial <- function(data_event) {
-  pob_especial <- config::get(file = system.file("extdata",
-                                                 "config.yml",
-                                                 package = "sivirep"),
-                              "special_populations_cols")
-  pob_especial_noms <- config::get(file =
-                                     system.file("extdata",
-                                                 "config.yml",
-                                                 package = "sivirep"),
-                                   "special_populations_names")
+  pob_especial <- config::get(
+    file = system.file("extdata",
+      "config.yml",
+      package = "sivirep"
+    ),
+    "special_populations_cols"
+  )
+  pob_especial_noms <- config::get(
+    file =
+      system.file("extdata",
+        "config.yml",
+        package = "sivirep"
+      ),
+    "special_populations_names"
+  )
   casos_especiales <- c()
   for (sp in pob_especial) {
     casos_especiales <- append(casos_especiales, sum(
-      eval(parse(text =
-                   paste0("data_event$", sp)))
+      eval(parse(
+        text =
+          paste0("data_event$", sp)
+      ))
     ))
   }
   data_pob_especial <- data.frame(
@@ -167,11 +187,15 @@ agrupar_casos_semanaepi <- function(data_event) {
 #' @examples
 #' data_event <- import_data_event(2019, "DENGUE")
 #' data_event <- limpiar_encabezado(data_event)
-#' agrupar_cols_casos(data_event = data_event,
-#'                    cols_nombres = "sexo",
-#'                    agr_porcentaje = TRUE)
-#' agrupar_cols_casos(data_event = data_event,
-#'                    cols_nombres = c("sexo", "semana"))
+#' agrupar_cols_casos(
+#'   data_event = data_event,
+#'   cols_nombres = "sexo",
+#'   agr_porcentaje = TRUE
+#' )
+#' agrupar_cols_casos(
+#'   data_event = data_event,
+#'   cols_nombres = c("sexo", "semana")
+#' )
 #' @export
 agrupar_cols_casos <- function(data_event,
                                cols_nombres,
@@ -184,10 +208,14 @@ agrupar_cols_casos <- function(data_event,
   if (agr_porcentaje) {
     data_event_agrupada <-
       data_event_agrupada %>%
-      dplyr::mutate(porcentaje =
-                    round(data_event_agrupada$casos
-                          / sum(data_event_agrupada$casos) * 100,
-                          1))
+      dplyr::mutate(
+        porcentaje =
+          round(
+            data_event_agrupada$casos
+              / sum(data_event_agrupada$casos) * 100,
+            1
+          )
+      )
   }
   return(data_event_agrupada)
 }
@@ -216,14 +244,18 @@ agrupar_cols_casos <- function(data_event,
 #' @examples
 #' data_event <- import_data_event(2019, "DENGUE")
 #' data_event <- limpiar_encabezado(data_event)
-#' data_edad <- agrupar_cols_casos(data_event = data_event,
-#'                                 c("edad", "semana"),
-#'                                 agr_porcentaje = TRUE)
-#' agrupar_rango_edad_casos(data_event = data_edad,
-#'                          col_nombre = "edad",
-#'                          min_val = 0,
-#'                          max_val = max(data_edad$edad),
-#'                          paso = 10)
+#' data_edad <- agrupar_cols_casos(
+#'   data_event = data_event,
+#'   c("edad", "semana"),
+#'   agr_porcentaje = TRUE
+#' )
+#' agrupar_rango_edad_casos(
+#'   data_event = data_edad,
+#'   col_nombre = "edad",
+#'   min_val = 0,
+#'   max_val = max(data_edad$edad),
+#'   paso = 10
+#' )
 #' @export
 agrupar_rango_edad_casos <- function(data_event,
                                      col_nombre,
@@ -273,11 +305,15 @@ agrupar_rango_edad_casos <- function(data_event,
 #' @examples
 #' data_event <- import_data_event(2019, "DENGUE")
 #' data_event <- limpiar_encabezado(data_event)
-#' agrupar_cols_casos(data_event = data_event,
-#'                    cols_nombres = "sexo",
-#'                    agr_porcentaje = TRUE)
-#' agrupar_cols_casos(data_event = data_event,
-#'                    cols_nombres = c("sexo", "semana"))
+#' agrupar_cols_casos(
+#'   data_event = data_event,
+#'   cols_nombres = "sexo",
+#'   agr_porcentaje = TRUE
+#' )
+#' agrupar_cols_casos(
+#'   data_event = data_event,
+#'   cols_nombres = c("sexo", "semana")
+#' )
 #' @export
 agrupar_cols_casos <- function(data_event,
                                cols_nombres,
@@ -289,10 +325,14 @@ agrupar_cols_casos <- function(data_event,
   if (agr_porcentaje) {
     data_event_agrupada <-
       data_event_agrupada %>%
-      dplyr::mutate(porcentaje =
-                    round(data_event_agrupada$casos
-                          / sum(data_event_agrupada$casos) * 100,
-                          1))
+      dplyr::mutate(
+        porcentaje =
+          round(
+            data_event_agrupada$casos
+              / sum(data_event_agrupada$casos) * 100,
+            1
+          )
+      )
   }
   return(data_event_agrupada)
 }
@@ -314,25 +354,31 @@ agrupar_cols_casos <- function(data_event,
 #' @examples
 #' data_event <- import_data_event(2019, "DENGUE")
 #' data_event <- limpiar_encabezado(data_event)
-#' agrupar_fecha_inisintomas(data_event = data_event,
-#'                           col_nombre = "ini_sin",
-#'                           tipo = "month")
+#' agrupar_fecha_inisintomas(
+#'   data_event = data_event,
+#'   col_nombre = "ini_sin",
+#'   tipo = "month"
+#' )
 #' @export
 agrupar_fecha_inisintomas <- function(data_event,
                                       col_nombre = "ini_sin",
                                       tipo = "month") {
-  fechas_cols_nombres <- config::get(file =
-                                       system.file("extdata",
-                                                   "config.yml",
-                                                   package = "sivirep"),
-                                     "dates_column_names")
+  fechas_cols_nombres <- config::get(
+    file =
+      system.file("extdata",
+        "config.yml",
+        package = "sivirep"
+      ),
+    "dates_column_names"
+  )
   if (is.null(col_nombre)) {
     col_nombre <- fechas_cols_nombres[3]
   }
   cols_ocurren <- obtener_tip_ocurren_geo(data_event$cod_eve[1])
   col_nombre <- append(col_nombre, cols_ocurren)
   group_by_onset_symp <- agrupar_cols_casos(data_event,
-                                            cols_nombres = col_nombre)
+    cols_nombres = col_nombre
+  )
   return(group_by_onset_symp)
 }
 
@@ -353,25 +399,31 @@ agrupar_fecha_inisintomas <- function(data_event,
 #' @examples
 #' data_event <- import_data_event(2019, "DENGUE")
 #' data_event <- limpiar_encabezado(data_event)
-#' agrupar_fecha_notifica(data_event = data_event,
-#'                        col_nombre = "fec_not",
-#'                        tipo = "month")
+#' agrupar_fecha_notifica(
+#'   data_event = data_event,
+#'   col_nombre = "fec_not",
+#'   tipo = "month"
+#' )
 #' @export
 agrupar_fecha_notifica <- function(data_event,
                                    col_nombre = "fec_not",
                                    tipo = "month") {
-  fechas_cols_nombres <- config::get(file =
-                                       system.file("extdata",
-                                                   "config.yml",
-                                                   package = "sivirep"),
-                                     "dates_column_names")
+  fechas_cols_nombres <- config::get(
+    file =
+      system.file("extdata",
+        "config.yml",
+        package = "sivirep"
+      ),
+    "dates_column_names"
+  )
   if (is.null(col_nombre)) {
     col_nombre <- fechas_cols_nombres[2]
   }
   cols_ocurrenc <- obtener_tip_ocurren_geo(data_event$cod_eve[1])
   col_nombre <- append(col_nombre, cols_ocurrenc)
   data_agrupada_fecha_not <- agrupar_cols_casos(data_event,
-                                                cols_nombres = col_nombre)
+    cols_nombres = col_nombre
+  )
   return(data_agrupada_fecha_not)
 }
 
@@ -392,9 +444,11 @@ agrupar_fecha_notifica <- function(data_event,
 #' @examples
 #' data_event <- import_data_event(2019, "DENGUE")
 #' data_event <- limpiar_encabezado(data_event)
-#' agrupar_sex(data_event = data_event,
-#'             col_nombre = "sexo",
-#'             porcentaje = TRUE)
+#' agrupar_sex(
+#'   data_event = data_event,
+#'   col_nombre = "sexo",
+#'   porcentaje = TRUE
+#' )
 #' @export
 agrupar_sex <- function(data_event,
                         col_nombre = "sexo",
@@ -422,18 +476,22 @@ agrupar_sex <- function(data_event,
 #' @examples
 #' data_event <- import_data_event(2019, "DENGUE")
 #' data_event <- limpiar_encabezado(data_event)
-#' agrupar_sex_semanaepi(data_event = data_event,
-#'                       col_nombres = c("sexo", "semana"),
-#'                       porcentaje = TRUE)
+#' agrupar_sex_semanaepi(
+#'   data_event = data_event,
+#'   col_nombres = c("sexo", "semana"),
+#'   porcentaje = TRUE
+#' )
 #' @export
 agrupar_sex_semanaepi <- function(data_event,
                                   col_nombres = c("sexo", "semana"),
                                   porcentaje = TRUE) {
   cols_ocurrenc <- obtener_tip_ocurren_geo(data_event$cod_eve[1])
   col_nombres <- append(col_nombres, cols_ocurrenc)
-  data_event_sex_semanaepi <- agrupar_cols_casos(data_event,
-                                                 col_nombres,
-                                                 porcentaje)
+  data_event_sex_semanaepi <- agrupar_cols_casos(
+    data_event,
+    col_nombres,
+    porcentaje
+  )
   return(data_event_sex_semanaepi)
 }
 
@@ -456,26 +514,35 @@ agrupar_sex_semanaepi <- function(data_event,
 #' @examples
 #' data_event <- import_data_event(2019, "DENGUE")
 #' data_event <- limpiar_encabezado(data_event)
-#' agrupar_edad(data_event = data_event,
-#'              col_nombre = "edad",
-#'              porcentaje = FALSE)
+#' agrupar_edad(
+#'   data_event = data_event,
+#'   col_nombre = "edad",
+#'   porcentaje = FALSE
+#' )
 #' @export
 agrupar_edad <- function(data_event,
                          col_nombre = "edad",
                          porcentaje = FALSE,
                          interval_edad = 10) {
-  data_event_edad <- agrupar_cols_casos(data_event,
-                                        col_nombre,
-                                        porcentaje)
+  data_event_edad <- agrupar_cols_casos(
+    data_event,
+    col_nombre,
+    porcentaje
+  )
   data_event_edad <-
     agrupar_rango_edad_casos(data_event_edad,
-                             col_nombre,
-                             min_val = 0,
-                             max_val =
-                             max(eval(parse(text =
-                                              paste0("data_event_edad$",
-                                                     col_nombre)))),
-                             paso = interval_edad)
+      col_nombre,
+      min_val = 0,
+      max_val =
+        max(eval(parse(
+          text =
+            paste0(
+              "data_event_edad$",
+              col_nombre
+            )
+        ))),
+      paso = interval_edad
+    )
   return(data_event_edad)
 }
 
@@ -499,9 +566,11 @@ agrupar_edad <- function(data_event,
 #' @examples
 #' data_event <- import_data_event(2019, "DENGUE")
 #' data_event <- limpiar_encabezado(data_event)
-#' agrupar_edad_sex(data_event = data_event,
-#'                  col_nombres = c("edad", "sexo"),
-#'                  porcentaje = TRUE)
+#' agrupar_edad_sex(
+#'   data_event = data_event,
+#'   col_nombres = c("edad", "sexo"),
+#'   porcentaje = TRUE
+#' )
 #' @export
 agrupar_edad_sex <- function(data_event,
                              col_nombres = c("edad", "sexo"),
@@ -509,9 +578,11 @@ agrupar_edad_sex <- function(data_event,
                              interval_edad = 10) {
   cols_ocurrenc <- obtener_tip_ocurren_geo(data_event$cod_eve[1])
   col_nombres <- append(col_nombres, cols_ocurrenc)
-  data_event_edad_sex <- agrupar_cols_casos(data_event,
-                                            col_nombres,
-                                            porcentaje)
+  data_event_edad_sex <- agrupar_cols_casos(
+    data_event,
+    col_nombres,
+    porcentaje
+  )
   data_event_edad_sex <- agrupar_rango_edad_casos(
     data_event_edad_sex,
     col_nombres[1],
@@ -546,9 +617,11 @@ agrupar_edad_sex <- function(data_event,
 #' @examples
 #' data_event <- import_data_event(2019, "DENGUE")
 #' data_event <- limpiar_encabezado(data_event)
-#' agrupar_pob_especial(data_event = data_event,
-#'                      col_nombre = "poblacion",
-#'                      porcentaje = TRUE)
+#' agrupar_pob_especial(
+#'   data_event = data_event,
+#'   col_nombre = "poblacion",
+#'   porcentaje = TRUE
+#' )
 #' @export
 agrupar_pob_especial <- function(data_event,
                                  col_nombre = "poblacion",
@@ -556,10 +629,12 @@ agrupar_pob_especial <- function(data_event,
   cols_ocurrenc <- obtener_tip_ocurren_geo(data_event$cod_eve[1])
   col_nombre <- append(col_nombre, cols_ocurrenc)
   data_event_especial <- obtener_casos_pob_especial(data_event)
-  data_event_especial_agrupada <- data.frame(poblacion =
-                                               data_event_especial$poblacion,
-                                             casos =
-                                               data_event_especial$casos)
+  data_event_especial_agrupada <- data.frame(
+    poblacion =
+      data_event_especial$poblacion,
+    casos =
+      data_event_especial$casos
+  )
   return(data_event_especial_agrupada)
 }
 
@@ -580,9 +655,11 @@ agrupar_pob_especial <- function(data_event,
 #' @examples
 #' data_event <- import_data_event(2019, "DENGUE")
 #' data_event <- limpiar_encabezado(data_event)
-#' agrupar_dpto(data_event = data_event,
-#'              col_nombre = "cod_dpto_o",
-#'              porcentaje = FALSE)
+#' agrupar_dpto(
+#'   data_event = data_event,
+#'   col_nombre = "cod_dpto_o",
+#'   porcentaje = FALSE
+#' )
 #' @export
 agrupar_dpto <- function(data_event,
                          col_nombre = "cod_dpto_o",
@@ -590,11 +667,14 @@ agrupar_dpto <- function(data_event,
   data_event_cods_dpto <- data_event
   col_nombre <- obtener_tip_ocurren_geo(data_event_cods_dpto$cod_eve[1])
   data_event_cods_dpto <- agrupar_cols_casos(data_event_cods_dpto,
-                                             cols_nombres = col_nombre[1])
+    cols_nombres = col_nombre[1]
+  )
   colnames(data_event_cods_dpto)[colnames(data_event_cods_dpto) ==
-                                   col_nombre[1]] <- "id"
-  data_event_cods_dpto$id <- sapply(data_event_cods_dpto$id,
-                                    as.character)
+    col_nombre[1]] <- "id"
+  data_event_cods_dpto$id <- sapply(
+    data_event_cods_dpto$id,
+    as.character
+  )
   return(data_event_cods_dpto)
 }
 
@@ -618,10 +698,12 @@ agrupar_dpto <- function(data_event,
 #' @examples
 #' data_event <- import_data_event(2019, "DENGUE")
 #' data_event <- limpiar_encabezado(data_event)
-#' agrupar_mun(data_event = data_event,
-#'             dept_nombre = "Antioquia",
-#'             col_nombre = "cod_mun_o",
-#'             porcentaje = FALSE)
+#' agrupar_mun(
+#'   data_event = data_event,
+#'   dept_nombre = "Antioquia",
+#'   col_nombre = "cod_mun_o",
+#'   porcentaje = FALSE
+#' )
 #' @export
 agrupar_mun <- function(data_event,
                         dept_nombre = NULL,
@@ -630,21 +712,58 @@ agrupar_mun <- function(data_event,
   col_nombre <- obtener_tip_ocurren_geo(data_event$cod_eve[1])
   data_event_muns <- data_event
   data_event_muns <- agrupar_cols_casos(data_event_muns,
-                                        cols_nombres = col_nombre[2])
+    cols_nombres = col_nombre[2]
+  )
   colnames(data_event_muns)[colnames(data_event_muns) ==
-                              col_nombre[2]] <- "id"
-  data_event_muns$id <- sapply(data_event_muns$id,
-                               as.character)
+    col_nombre[2]] <- "id"
+  data_event_muns$id <- sapply(
+    data_event_muns$id,
+    as.character
+  )
   dept_data <- obtener_info_depts(dept_nombre)
   dept_data <- dept_data[1, ]
   nombres_muns <- c()
   geo_data <- import_geo_cods()
   for (id in data_event_muns$id) {
-    nombres_muns <- append(nombres_muns,
-                           obtener_nombres_muns(geo_data,
-                                                dept_data$codigo_departamento,
-                                                id))
+    nombres_muns <- append(
+      nombres_muns,
+      obtener_nombres_muns(
+        geo_data,
+        dept_data$codigo_departamento,
+        id
+      )
+    )
   }
   data_event_muns$nombre <- nombres_muns
   return(data_event_muns)
+}
+
+
+#' Crear canal endémico
+#'
+#' @param data_event Un `data.frame` con los casos de la enfermedad
+#' @param departamento Un numeric (numérico) con el código del departamento
+#' @param municipio Un numeric (numérico) con el código del municipio
+#' @param observations Un vector numérico de observaciones
+#'
+#' @return Un `data.frame` con los límites del canal endémico y las
+#' observaciones (en caso de que las haya)
+#'
+#' @examples
+#' @export
+crear_canal_endemico <- function(data_event, departamento, municipio = NULL,
+                                 observations = NULL) {
+  cod <- departamento
+  if (!is.null(municipio)) {
+    cod <- as.numeric(paste0(departamento, municipio))
+    data_event <- dplyr::filter(data_event, .data$cod_mun_o == cod)
+  } else {
+    data_event <- dplyr::filter(data_event, .data$cod_dpto_o == cod)
+  }
+
+  incidence_historic <- incidence::incidence(disease_data$fec_not,
+    interval = "1 epiweek"
+  )
+
+  epiCo::endemic_channel(observations, incidence_historic, plot = TRUE)
 }
