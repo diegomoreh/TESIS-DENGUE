@@ -9,10 +9,13 @@
 #' @export
 import_data_resumen_sivigila <- function(url_data = NULL) {
   if (is.null(url_data)) {
-    url_data <- config::get(file =
-                              system.file("extdata", "config.yml",
-                                          package = "sivirep"),
-                            "sivigila_open_data_path")
+    url_data <- config::get(
+      file =
+        system.file("extdata", "config.yml",
+          package = "sivirep"
+        ),
+      "sivigila_open_data_path"
+    )
   }
   data <- utils::read.csv(url_data)
   return(data)
@@ -27,16 +30,21 @@ import_data_resumen_sivigila <- function(url_data = NULL) {
 #' @return Un `data.frame` con los nombres y códigos de los departamentos
 #' y municipios de Colombia
 #' @examples
-#' import_geo_cods(url_data =
-#' "https://www.datos.gov.co/api/views/gdxc-w37w/rows.csv?accessType=DOWNLOAD")
+#' import_geo_cods(
+#'   url_data =
+#'     "https://www.datos.gov.co/api/views/gdxc-w37w/rows.csv?accessType=DOWNLOAD"
+#' )
 #' @export
 import_geo_cods <- function(url_data = NULL) {
   if (is.null(url_data)) {
-    url_data <- config::get(file =
-                              system.file("extdata",
-                                          "config.yml",
-                                          package = "sivirep"),
-                            "geo_data_path")
+    url_data <- config::get(
+      file =
+        system.file("extdata",
+          "config.yml",
+          package = "sivirep"
+        ),
+      "geo_data_path"
+    )
   }
   data <- utils::read.csv(url_data)
   names(data) <- epitrix::clean_labels(names(data))
@@ -51,12 +59,15 @@ import_geo_cods <- function(url_data = NULL) {
 #' la URL de los datos de SIVIGILA
 #' @return Un `data.frame` con los datos
 #' @examples
-#' import_sep_data(path_data =
-#' "https://www.datos.gov.co/api/views/qvnt-2igj/rows.csv?accessType=DOWNLOAD")
+#' import_sep_data(
+#'   path_data =
+#'     "https://www.datos.gov.co/api/views/qvnt-2igj/rows.csv?accessType=DOWNLOAD"
+#' )
 #' @export
 import_sep_data <- function(path_data) {
   seps <- config::get(file = system.file("extdata", "config.yml",
-                                         package = "sivirep"), "data_delim")
+    package = "sivirep"
+  ), "data_delim")
   data <- data.frame()
   for (sep in seps) {
     if (sep %in% strsplit(readLines(path_data, n = 1)[1], split = "")[[1]]) {
@@ -82,26 +93,29 @@ import_sep_data <- function(path_data) {
 #' de referencia para la descarga de los datos
 #' @param ventana Un numeric (numerico) que contiene la cantidad
 #' de años de referencia para la descarga de datos
+#' @param saltar Un vector de años a omitir
 #' @return Un `data.frame` con los datos de los últimos cinco años
 #' de una enfermedad
 #' @examples
-#' import_data_canal_endemico(nombre_event = "MALARIA",
-#'                            year = 2020)
+#' import_data_canal_endemico(
+#'   nombre_event = "MALARIA",
+#'   year = 2020
+#' )
 #' @export
-import_data_canal_endemico <- function(nombre_event, year, ventana) {
-  
+import_data_canal_endemico <- function(nombre_event, year, ventana, saltar) {
   years_to_analyze <- seq(year - ventana + 1, year)
-  
+  years_to_analyze <- years_to_analyze[!which(years_to_analyze %in% saltar)]
+
   tags_to_analyze <- c(
     "FEC_NOT",
     "COD_PAIS_O", "COD_DPTO_O", "COD_MUN_O",
     "COD_DPTO_R", "COD_MUN_R",
     "COD_DPTO_N", "COD_MUN_N"
   )
-  
+
   disease_data <- data.frame(matrix(ncol = length(tags_to_analyze), nrow = 0))
   colnames(disease_data) <- tags_to_analyze
-  
+
   for (y in years_to_analyze) {
     temp_data <- sivirep::import_data_event(y, nombre_event)
     temp_data$FEC_NOT <- as.character(temp_data$FEC_NOT)
@@ -114,8 +128,9 @@ import_data_canal_endemico <- function(nombre_event, year, ventana) {
     #   "%Y-%m-%d"
     # )
     temp_data <- format_fecha(temp_data,
-                              format_fecha = "%AAAA-%MM-%DD",
-                              nombres_col = "FEC_NOT")
+      format_fecha = "%AAAA-%MM-%DD",
+      nombres_col = "FEC_NOT"
+    )
     disease_data <- rbind(
       disease_data,
       dplyr::select(
@@ -124,7 +139,7 @@ import_data_canal_endemico <- function(nombre_event, year, ventana) {
       )
     )
   }
-  
+
   return(disease_data)
 }
 
@@ -139,23 +154,32 @@ import_data_canal_endemico <- function(nombre_event, year, ventana) {
 #' list_events()
 #' @export
 list_events <- function() {
-  query_event_year_path <- config::get(file =
-                                         system.file("extdata",
-                                                     "config.yml",
-                                                     package = "sivirep"),
-                                       "query_diseases_by_year_path")
-  query_event_year <- httr::GET(query_event_year_path,
-                                httr::add_headers("Accept" = "*/*"))
+  query_event_year_path <- config::get(
+    file =
+      system.file("extdata",
+        "config.yml",
+        package = "sivirep"
+      ),
+    "query_diseases_by_year_path"
+  )
+  query_event_year <- httr::GET(
+    query_event_year_path,
+    httr::add_headers("Accept" = "*/*")
+  )
   content_type_response <-
     stringr::str_split_fixed(httr::headers(query_event_year)$`content-type`,
-                             pattern = ";",
-                             3)
+      pattern = ";",
+      3
+    )
   content_type_response <-
-    stringr::str_replace(content_type_response[[1]],
-                         "atom\\+", "")
+    stringr::str_replace(
+      content_type_response[[1]],
+      "atom\\+", ""
+    )
   query_event_year_content <- httr::content(query_event_year,
-                                            type = content_type_response,
-                                            encoding = "UTF-8")
+    type = content_type_response,
+    encoding = "UTF-8"
+  )
   children <- xml2::xml_children(query_event_year_content)
   children <- xml2::xml_children(children)
   children <- xml2::xml_children(children)
@@ -172,26 +196,35 @@ list_events <- function() {
     diseases <- base::which(children_text == disease)
     years <- diseases - 1
     years_diseases <-
-      base::append(years_diseases,
-                   base::toString(base::sort(children_text[years],
-                                             decreasing = FALSE)))
+      base::append(
+        years_diseases,
+        base::toString(base::sort(children_text[years],
+          decreasing = FALSE
+        ))
+      )
     children <- children[-years]
     children_text <- children_text[-(diseases - 1)]
     children <- children[-base::which(children_text == disease)]
     children_text <- children_text[-base::which(children_text == disease)]
     i <- i + 2
   }
-  additional_diseases <- config::get(file =
-                                       system.file("extdata",
-                                                   "config.yml",
-                                                   package = "sivirep"),
-                                     "additional_diseases")
+  additional_diseases <- config::get(
+    file =
+      system.file("extdata",
+        "config.yml",
+        package = "sivirep"
+      ),
+    "additional_diseases"
+  )
   name_diseases <- base::append(name_diseases, additional_diseases)
   years_diseases <- base::append(years_diseases, c("", ""))
-  list_events <- data.frame(enfermedad = name_diseases,
-                            aa = years_diseases)
+  list_events <- data.frame(
+    enfermedad = name_diseases,
+    aa = years_diseases
+  )
   list_events <- list_events[order(list_events$enfermedad,
-                                   decreasing = FALSE), ]
+    decreasing = FALSE
+  ), ]
   return(list_events)
 }
 
@@ -217,10 +250,14 @@ import_data_event <- function(year,
   data_event <- data.frame()
   list_events <- list_events()
   grupo_events <-
-    list_events[which(stringr::str_detect(list_events$enfermedad,
-                                          substr(nombre_event,
-                                                 1,
-                                                 nchar(nombre_event) - 1))), ]
+    list_events[which(stringr::str_detect(
+      list_events$enfermedad,
+      substr(
+        nombre_event,
+        1,
+        nchar(nombre_event) - 1
+      )
+    )), ]
   for (event in grupo_events$enfermedad) {
     if (event != "MALARIA") {
       data_url <- get_path_data_disease_year(year, event)
@@ -244,12 +281,19 @@ import_data_event <- function(year,
 #' obtener_ruta_descarga("DENGUE")
 #' @export
 obtener_ruta_descarga <- function(ruta) {
-  nombre_archivo <- strsplit(ruta,
-                             config::get(file =
-                                           system.file("extdata", "config.yml",
-                                                       package = "sivirep"),
-                                         "name_file_split"))
-  nombre_archivo <- strsplit(nombre_archivo[[1]][2],
-                             "')")[[1]][1] %>% as.character()
+  nombre_archivo <- strsplit(
+    ruta,
+    config::get(
+      file =
+        system.file("extdata", "config.yml",
+          package = "sivirep"
+        ),
+      "name_file_split"
+    )
+  )
+  nombre_archivo <- strsplit(
+    nombre_archivo[[1]][2],
+    "')"
+  )[[1]][1] %>% as.character()
   return(nombre_archivo)
 }
