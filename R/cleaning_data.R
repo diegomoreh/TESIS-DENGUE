@@ -12,22 +12,27 @@
 #' estandarizar_geo_cods(data_event = data_event)
 #' @export
 estandarizar_geo_cods <- function(data_event) {
-  geo_columns <- config::get(file =
-                               system.file("extdata", "config.yml",
-                                           package = "sivirep"),
-                             "geo_column_names")
+  geo_columns <- config::get(
+    file =
+      system.file("extdata", "config.yml",
+        package = "sivirep"
+      ),
+    "geo_column_names"
+  )
   for (column in geo_columns) {
     if (stringr::str_detect(column, "dpto") == TRUE) {
       data_event[[column]] <- formatC(data_event[[column]],
-                                      width = 2,
-                                      format = "d",
-                                      flag = "0")
+        width = 2,
+        format = "d",
+        flag = "0"
+      )
     }
     if (stringr::str_detect(column, "mun") == TRUE) {
       data_event[[column]] <- formatC(data_event[[column]],
-                                      width = 3,
-                                      format = "d",
-                                      flag = "0")
+        width = 3,
+        format = "d",
+        flag = "0"
+      )
     }
   }
   return(data_event)
@@ -52,11 +57,14 @@ estandarizar_geo_cods <- function(data_event) {
 #' data_event <- import_data_event(2019, "DENGUE")
 #' data_event <- limpiar_encabezado(data_event)
 #' data_agrupada <- agrupar_cols_casos(data_event,
-#'                                     "cod_dpto_o",
-#'                                     agr_porcentaje = TRUE)
-#' limpiar_cods_event_dpto(depto_cods = depto_cods,
-#'                         data_event = data_agrupada,
-#'                         agrupar = TRUE)
+#'   "cod_dpto_o",
+#'   agr_porcentaje = TRUE
+#' )
+#' limpiar_cods_event_dpto(
+#'   depto_cods = depto_cods,
+#'   data_event = data_agrupada,
+#'   agrupar = TRUE
+#' )
 #' @export
 limpiar_cods_event_dpto <- function(depto_cods,
                                     data_event,
@@ -93,10 +101,12 @@ limpiar_cods_event_dpto <- function(depto_cods,
 #' geo_codes <- import_geo_cods()
 #' data_event <- import_data_event(2019, "DENGUE")
 #' data_event <- limpiar_encabezado(data_event)
-#' limpiar_cods_dpto(data_event = data_event,
-#'                   col_cods_data = "cod_dpto_o",
-#'                   geo_data = geo_codes,
-#'                   col_geo_cods = "codigo_departamento")
+#' limpiar_cods_dpto(
+#'   data_event = data_event,
+#'   col_cods_data = "cod_dpto_o",
+#'   geo_data = geo_codes,
+#'   col_geo_cods = "codigo_departamento"
+#' )
 #' @export
 limpiar_cods_dpto <- function(data_event,
                               col_cods_data,
@@ -105,8 +115,10 @@ limpiar_cods_dpto <- function(data_event,
   col_detps_geo <- eval(parse(text = paste0("geo_data$", col_geo_cods)))
   col_detps_geo <- as.character(col_detps_geo)
   data_event_clean <- data_event
-  col_detps_data <- eval(parse(text =
-                                 paste0("data_event_clean$", col_cods_data)))
+  col_detps_data <- eval(parse(
+    text =
+      paste0("data_event_clean$", col_cods_data)
+  ))
   col_detps_data <- as.character(col_detps_data)
   col_detps_data[
     nchar(col_detps_data) < 2 & col_detps_data != "1" & col_detps_data != "0" &
@@ -115,9 +127,9 @@ limpiar_cods_dpto <- function(data_event,
     nchar(col_detps_data) < 2 & col_detps_data != "1" & col_detps_data != "0" &
       paste("0", col_detps_data, sep = "") %in% col_detps_geo
   ], sep = "")
-  col_detps_data[col_detps_data == "1"
-                 & paste("1", col_detps_data, sep = "")
-                 %in% col_detps_geo] <- "11"
+  col_detps_data[col_detps_data == "1" &
+    paste("1", col_detps_data, sep = "")
+    %in% col_detps_geo] <- "11"
   return(data_event_clean)
 }
 
@@ -138,32 +150,49 @@ limpiar_cods_dpto <- function(data_event,
 #' @examples
 #' data_event <- import_data_event(2019, "DENGUE")
 #' data_event <- limpiar_encabezado(data_event)
-#' convert_edad(data_event = data_event,
-#'              col_edad = "edad",
-#'              col_uni_med = "uni_med")
+#' convert_edad(
+#'   data_event = data_event,
+#'   col_edad = "edad",
+#'   col_uni_med = "uni_med"
+#' )
 #' @export
 convert_edad <- function(data_event,
                          col_edad = "edad",
                          col_uni_med = "uni_med") {
   data_event_years <-
     dplyr::mutate(data_event,
-                  edad =
-                    dplyr::case_when(eval(parse(text = col_uni_med)) == 1 ~
-                                       round(eval(parse(text = col_edad)), 3),
-                                     eval(parse(text = col_uni_med)) == 2 ~
-                                       round((eval(parse(text =
-                                                           col_edad)) / 12), 3),
-                                     eval(parse(text = col_uni_med)) == 3 ~
-                                       round((eval(parse(text =
-                                                           col_edad)) / 876), 3),
-                                     eval(parse(text = col_uni_med)) == 4 ~
-                                       round((eval(parse(text =
-                                                           col_edad)) / 525960),
-                                             3),
-                                     eval(parse(text = col_uni_med)) == 5 ~
-                                       round((eval(parse(text =
-                                                           col_edad)) / 3.156e+7),
-                                             3)))
+      edad =
+        dplyr::case_when(
+          eval(parse(text = col_uni_med)) == 1 ~
+            round(eval(parse(text = col_edad)), 3),
+          eval(parse(text = col_uni_med)) == 2 ~
+            round((eval(parse(
+              text =
+                col_edad
+            )) / 12), 3),
+          eval(parse(text = col_uni_med)) == 3 ~
+            round((eval(parse(
+              text =
+                col_edad
+            )) / 876), 3),
+          eval(parse(text = col_uni_med)) == 4 ~
+            round(
+              (eval(parse(
+                text =
+                  col_edad
+              )) / 525960),
+              3
+            ),
+          eval(parse(text = col_uni_med)) == 5 ~
+            round(
+              (eval(parse(
+                text =
+                  col_edad
+              )) / 3.156e+7),
+              3
+            )
+        )
+    )
   return(data_event_years)
 }
 
@@ -186,8 +215,10 @@ remove_val_nin <- function(data_event, nom_col) {
   data_event_del <- data_event
   del_rows <-
     which(ifelse(is.na(eval(parse(text = ref_col))), TRUE,
-                 ifelse(is.nan(eval(parse(text = ref_col))), TRUE,
-                        is.infinite(eval(parse(text = ref_col))))))
+      ifelse(is.nan(eval(parse(text = ref_col))), TRUE,
+        is.infinite(eval(parse(text = ref_col)))
+      )
+    ))
   if (length(del_rows) > 0) data_event_del <- data_event[-del_rows]
   return(data_event_del)
 }
@@ -208,9 +239,11 @@ remove_val_nin <- function(data_event, nom_col) {
 #' @examples
 #' data_event <- import_data_event(2019, "DENGUE")
 #' data_event <- limpiar_encabezado(data_event)
-#' remove_error_fecha(data_event = data_event,
-#'                    col_ini = "ini_sin",
-#'                    col_comp = "fec_hos")
+#' remove_error_fecha(
+#'   data_event = data_event,
+#'   col_ini = "ini_sin",
+#'   col_comp = "fec_hos"
+#' )
 #' @export
 remove_error_fecha <- function(data_event,
                                col_ini = "ini_sin",
@@ -235,9 +268,11 @@ remove_error_fecha <- function(data_event,
 #' @examples
 #' data_event <- import_data_event(2020, "DENGUE")
 #' data_event <- format_fecha(data_event)
-#' format_fecha(data_event = data_event,
-#'              format_fecha = "%AAAA-%MM-%DD",
-#'              nombres_col = c("ini_sin", "fec_hos"))
+#' format_fecha(
+#'   data_event = data_event,
+#'   format_fecha = "%AAAA-%MM-%DD",
+#'   nombres_col = c("ini_sin", "fec_hos")
+#' )
 #' @export
 format_fecha <- function(data_event,
                          format_fecha = "%AAAA-%MM-%DD",
@@ -286,11 +321,13 @@ limpiar_encabezado <- function(data_event) {
 #' @examples
 #' data_event <- import_data_event(2020, "DENGUE")
 #' data_event <- limpiar_encabezado(data_event)
-#' limpiar_fecha_event(data_event = data_event,
-#'                     year = 2020,
-#'                     format_fecha = "%AAAA-%MM-%DD",
-#'                     nombre_col = "ini_sin",
-#'                     col_comp = "fec_hos")
+#' limpiar_fecha_event(
+#'   data_event = data_event,
+#'   year = 2020,
+#'   format_fecha = "%AAAA-%MM-%DD",
+#'   nombre_col = "ini_sin",
+#'   col_comp = "fec_hos"
+#' )
 #' @export
 limpiar_fecha_event <- function(data_event,
                                 year,
@@ -300,14 +337,22 @@ limpiar_fecha_event <- function(data_event,
   data_event_fecha_ini <- data_event
   if (!is.null(col_comp)) {
     data_event_fecha_ini <-
-      remove_error_fecha(data_event_fecha_ini,
-                         nombre_col,
-                         col_comp)
+      remove_error_fecha(
+        data_event_fecha_ini,
+        nombre_col,
+        col_comp
+      )
   }
-  data_event_fecha_ini[order(eval(parse(text =
-                                          paste0("data_event_fecha_ini$",
-                                                 nombre_col))),
-                             decreasing = TRUE), ]
+  data_event_fecha_ini[order(
+    eval(parse(
+      text =
+        paste0(
+          "data_event_fecha_ini$",
+          nombre_col
+        )
+    )),
+    decreasing = TRUE
+  ), ]
   data_event_fecha_ini <- data_event_fecha_ini[format(eval(
     parse(text = paste0("data_event_fecha_ini$", nombre_col))
   ), "%Y") == year, ]
@@ -347,11 +392,14 @@ limpiar_edad_event <- function(data_event, nombre_col = "edad") {
 #' data_event <- limpiar_encabezado(data_event = data_event)
 #' @export
 limpiar_val_atipic <- function(data_event) {
-  cols_events <- config::get(file =
-                               system.file("extdata",
-                                           "config.yml",
-                                           package = "sivirep"),
-                             "diseases_exceptions")
+  cols_events <- config::get(
+    file =
+      system.file("extdata",
+        "config.yml",
+        package = "sivirep"
+      ),
+    "diseases_exceptions"
+  )
   cod_event <- data_event$cod_eve[1]
   if (cod_event > 0) {
     for (event in cols_events) {
@@ -385,53 +433,73 @@ limpiar_val_atipic <- function(data_event) {
 limpiar_data_sivigila <- function(data_event, year) {
   data_event <- limpiar_encabezado(data_event)
   data_event <- limpiar_edad_event(data_event)
-  nom_cols_fechas <- config::get(file = system.file("extdata",
-                                                    "config.yml",
-                                                    package = "sivirep"),
-                                 "dates_column_names")
+  nom_cols_fechas <- config::get(
+    file = system.file("extdata",
+      "config.yml",
+      package = "sivirep"
+    ),
+    "dates_column_names"
+  )
   data_event_limp <- format_fecha(data_event,
-                                  nombres_col = nom_cols_fechas)
+    nombres_col = nom_cols_fechas
+  )
   nombre <- unique(data_event$nombre_evento)
   if (length(nombre) == 1 && !stringr::str_detect(nombre, "MORTALIDAD")) {
     data_event_limp <- limpiar_fecha_event(data_event_limp, year,
-                                           nombre_col = nom_cols_fechas[3],
-                                           col_comp = nom_cols_fechas[4])
+      nombre_col = nom_cols_fechas[3],
+      col_comp = nom_cols_fechas[4]
+    )
     data_event_limp <- limpiar_fecha_event(data_event_limp, year,
-                                           nombre_col = nom_cols_fechas[2])
+      nombre_col = nom_cols_fechas[2]
+    )
   }
   data_event_limp <- estandarizar_geo_cods(data_event_limp)
   data_event_limp <- convert_edad(data_event_limp,
-                                  col_edad = "edad",
-                                  col_uni_med = "uni_med")
+    col_edad = "edad",
+    col_uni_med = "uni_med"
+  )
   return(data_event_limp)
 }
 
 
-limpiar_data_canal_endemico <- function(data_event, year, ventana){
-  
+#' Limpiar datos importados para consturir su canal endémico
+#'
+#' @param data_event Un DataFrame con los casos de la enfermedad
+#' @param year Un numeric (numerico) que contiene el año
+#' de referencia para la descarga de los datos
+#' @param ventana Un numeric (numerico) que contiene la cantidad
+#' de años de referencia para la descarga de datos
+#' @param saltar Un vector de años a omitir
+#'
+#' @return Un `data.frame` con los casos limpios
+#'
+#' @export
+limpiar_data_canal_endemico <- function(data_event, year, ventana, saltar) {
   years_to_analyze <- seq(year - ventana + 1, year)
-  
+  years_to_analyze <- years_to_analyze[!which(years_to_analyze %in% saltar)]
+
   ## Dates and DIVIPOLA codes preparation and cleaning
-  
+
   data_event <- limpiar_encabezado(data_event)
   data_event <- estandarizar_geo_cods(data_event)
-  
+
   data_event <- data_event %>% dplyr::mutate(
     cod_mun_r = dplyr::case_when(
       .data$cod_dpto_r == 1 ~ .data$cod_pais_o, # 1 indicates residence abroad
       nchar(.data$cod_mun_r) == 1 ~
         as.numeric(paste(.data$cod_dpto_r,
-                         .data$cod_mun_r,
-                         sep = "00"
+          .data$cod_mun_r,
+          sep = "00"
         )),
       nchar(.data$cod_mun_r) == 2 ~
         as.numeric(paste(.data$cod_dpto_r,
-                         .data$cod_mun_r,
-                         sep = "0"
+          .data$cod_mun_r,
+          sep = "0"
         )),
       nchar(.data$cod_mun_r) == 3 ~
-        as.numeric(paste0(.data$cod_dpto_r,
-                          .data$cod_mun_r
+        as.numeric(paste0(
+          .data$cod_dpto_r,
+          .data$cod_mun_r
         )),
       TRUE ~ NA_real_
     ),
@@ -440,17 +508,18 @@ limpiar_data_canal_endemico <- function(data_event, year, ventana){
       .data$cod_dpto_o == 1 ~ .data$cod_pais_o,
       nchar(.data$cod_mun_o) == 1 ~
         as.numeric(paste(.data$cod_dpto_o,
-                         .data$cod_mun_o,
-                         sep = "00"
+          .data$cod_mun_o,
+          sep = "00"
         )),
       nchar(.data$cod_mun_o) == 2 ~
         as.numeric(paste(.data$cod_dpto_o,
-                         .data$cod_mun_o,
-                         sep = "0"
+          .data$cod_mun_o,
+          sep = "0"
         )),
       nchar(.data$cod_mun_o) == 3 ~
-        as.numeric(paste0(.data$cod_dpto_o,
-                          .data$cod_mun_o
+        as.numeric(paste0(
+          .data$cod_dpto_o,
+          .data$cod_mun_o
         )),
       TRUE ~ NA_real_
     ),
@@ -458,33 +527,33 @@ limpiar_data_canal_endemico <- function(data_event, year, ventana){
     epi_month = lubridate::month(.data$fec_not),
     epi_year = lubridate::epiyear(.data$fec_not)
   )
-  
+
   # Cleaning of cases without specified municipalities
-  
+
   data_event <- dplyr::filter(data_event, !is.na(data_event$cod_mun_o))
   data_event <- dplyr::filter(data_event, !is.na(data_event$cod_mun_r))
   data_event <- dplyr::filter(data_event, !is.na(data_event$cod_mun_n))
-  
+
   # Cleaning of cases out of the years range
-  
+
   data_event <- dplyr::filter(
     data_event,
     .data$epi_year %in% years_to_analyze
   )
-  
+
   # Cleaning of cases from abroad
-  
+
   data_event <- dplyr::filter(data_event, .data$cod_pais_o == 170)
-  
+
   # Cleaning of typos
   path <- system.file("data", "divipola_table.rda", package = "epiCo")
   load(path)
   divipola_table <- divipola_table
-  
+
   typos <- which(!(data_event$cod_mun_o %in% divipola_table$COD_MPIO))
-  
+
   data_event <- data_event[-typos, ]
-  
+
   #####
   return(data_event)
 }
